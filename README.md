@@ -8,7 +8,7 @@ Full description, settings and FAQ: [mod page](publish/TCG_Save_Manager/README.m
 
 ## Install
 
-Players: install it from Thunderstore (r2modman) or Nexus Mods. Requires BepInEx 5 (BepInExPack).
+**Download:** [Nexus Mods](https://www.nexusmods.com/tcgcardshopsimulator/mods/1927) (Thunderstore / r2modman: coming soon). Requires BepInEx 5 (BepInExPack).
 
 Add-ons built on Save Manager's shops: [TCG Custom Game Modes](https://github.com/dr4z0or/TCG-Custom-Game-Modes) (rules per shop) and [TCG Mod Profiles](https://github.com/dr4z0or/TCG-Mod-Profiles) (mods per shop).
 
@@ -33,4 +33,4 @@ Install: `TCG.SaveManager.Diagnostics.dll` and `TCG.SaveManager.Core.dll` in `Be
 
 ---
 
-**En français :** Boutiques séparées, chacune avec sa sauvegarde automatique et 3 emplacements manuels ; changement de boutique depuis le menu principal sans redémarrer ; import depuis le jeu ou n'importe quel dossier. Les joueurs l'installent depuis Thunderstore ou Nexus ; ce dépôt contient le code source.
+**En français :** Boutiques séparées, chacune avec sa sauvegarde automatique et 3 emplacements manuels ; changement de boutique depuis le menu principal sans redémarrer ; import depuis le jeu ou n'importe quel dossier. Les joueurs le téléchargent sur [Nexus Mods](https://www.nexusmods.com/tcgcardshopsimulator/mods/1927) (bientôt sur Thunderstore) ; ce dépôt contient le code source.
