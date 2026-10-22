@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <GameDir>D:\SteamLibrary\steamapps\common\TCG Card Shop Simulator</GameDir>
+    <SaveDir>C:\Users\YOUR_NAME\AppData\LocalLow\OPNeonGames\Card Shop Simulator</SaveDir>
+  </PropertyGroup>
+</Project>

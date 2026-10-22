@@ -1,0 +1,13 @@
+.tools/
+**/bin/
+**/obj/
+build/
+dist/
+local.props
+lab/
+artifacts/
+backups/
+# Game and Unity assemblies are never committed (copyright)
+references/*.dll
+*.png
+!publish/*/icon.png

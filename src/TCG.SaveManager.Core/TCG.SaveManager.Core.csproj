@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework><Version>1.4.1</Version></PropertyGroup>
+  <ItemGroup><Compile Include="../Shared/Lang.cs" Link="Lang.cs" /></ItemGroup>
+</Project>
