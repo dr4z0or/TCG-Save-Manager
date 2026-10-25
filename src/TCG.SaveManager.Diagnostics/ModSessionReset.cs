@@ -109,7 +109,22 @@ namespace TCG.SaveManager.Diagnostics
                 }
             }
         }
+        // 1.4.2 : a large save (8 MB) takes about a second to parse. The same files are hashed several
+        // times per archive (fingerprints, then capture), which froze the menu for several seconds:
+        // each file is now parsed once per change, keyed by path, size and modification time.
+        private static readonly Dictionary<string, (long Length, long Ticks, string Hash)> gameHashes = new Dictionary<string, (long, long, string)>(StringComparer.OrdinalIgnoreCase);
         public static string GameHash(string file)
+        {
+            var info = new FileInfo(file);
+            var length = info.Length; var ticks = info.LastWriteTimeUtc.Ticks;
+            if (gameHashes.TryGetValue(info.FullName, out var known) && known.Length == length && known.Ticks == ticks) return known.Hash;
+            var hash = ComputeGameHash(file);
+            // Stamp taken before reading: a file rewritten meanwhile is simply parsed again next time.
+            if (gameHashes.Count > 64) gameHashes.Clear();
+            gameHashes[info.FullName] = (length, ticks, hash);
+            return hash;
+        }
+        private static string ComputeGameHash(string file)
         {
             if (!Chainloader.PluginInfos.TryGetValue("com.qolmods.furnitureoverhaul", out var plugin))
             {
