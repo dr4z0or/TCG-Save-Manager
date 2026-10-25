@@ -1,8 +1,10 @@
 # Changelog
 
+## 1.4.3
+- Saving no longer froze the game for several seconds with large saves (Windows could show "Not responding"): each save file is now analysed once instead of several times.
+
 ## 1.4.2
 - Fixed an endless "quit and relaunch the game" loop when loading a shop with a version of Shop Lot C, Upstairs, Furniture Overhaul or Staff Overhaul that Save Manager does not know yet. The first shop loaded after starting the game now always loads directly; a restart is only asked when switching from one shop to another in the same session, and that restart now works.
-- Saving no longer freezes the menu for several seconds with large saves: each save file is analysed once instead of several times.
 
 ## 1.4.1 — first public release
 - Import only offers real game saves: files merely named like a save (test data, truncated copy) are ignored, so they cannot become a shop the game fails to load.

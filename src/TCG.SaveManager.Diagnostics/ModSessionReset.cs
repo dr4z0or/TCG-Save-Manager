@@ -109,7 +109,7 @@ namespace TCG.SaveManager.Diagnostics
                 }
             }
         }
-        // 1.4.2 : a large save (8 MB) takes about a second to parse. The same files are hashed several
+        // 1.4.3 : a large save (8 MB) takes about a second to parse. The same files are hashed several
         // times per archive (fingerprints, then capture), which froze the menu for several seconds:
         // each file is now parsed once per change, keyed by path, size and modification time.
         private static readonly Dictionary<string, (long Length, long Ticks, string Hash)> gameHashes = new Dictionary<string, (long, long, string)>(StringComparer.OrdinalIgnoreCase);
