@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework><Version>1.4.1</Version></PropertyGroup>
+  <PropertyGroup><TargetFramework>netstandard2.0</TargetFramework><Version>1.4.2</Version></PropertyGroup>
   <ItemGroup><Compile Include="../Shared/Lang.cs" Link="Lang.cs" />
     <ProjectReference Include="../TCG.SaveManager.Core/TCG.SaveManager.Core.csproj" />
     <Reference Include="BepInEx"><HintPath>$(GameDir)/BepInEx/core/BepInEx.dll</HintPath><Private>false</Private></Reference>

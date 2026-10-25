@@ -12,11 +12,14 @@ using UnityEngine;
 using static TCG.Shared.Lang;
 namespace TCG.SaveManager.Diagnostics
 {
-    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.1")]
+    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.2")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private Harmony? harmony;
         private static ManualLogSource? log;
+        // 1.4.2 : true once a shop has been loaded or started in this game session. Before that,
+        // the mods hold no shop state, so switching needs no reset (and never a restart).
+        private static bool shopPlayedThisSession;
         private bool visible = false;
         private bool updateConfirmed;
         private bool guiConfirmed;
@@ -48,6 +51,15 @@ namespace TCG.SaveManager.Diagnostics
             }
             catch { return false; }
         }
+        private bool InGameLevel()
+        {
+            try
+            {
+                var game = GameInstance("CGameManager");
+                return (bool)AccessTools.Field(game.GetType(), "m_IsGameLevel").GetValue(game);
+            }
+            catch { return false; }
+        }
         private void ChooseCampaign(string id, string kind, string snapshotId = "")
         {
             if (!IsAtTitle())
@@ -65,7 +77,9 @@ namespace TCG.SaveManager.Diagnostics
                     ?? throw new MissingMethodException("Démarrage natif indisponible.");
                 workspace!.CheckRequiredMods(id, kind, snapshotId, BepInEx.Bootstrap.Chainloader.PluginInfos.Keys);
                 Action resetMods;
-                try { resetMods = ModSessionReset.Prepare(message => Logger.LogInfo(message)); }
+                if (!shopPlayedThisSession)
+                    resetMods = () => Logger.LogInfo("Première boutique de la session : aucun état de mod à réinitialiser.");
+                else try { resetMods = ModSessionReset.Prepare(message => Logger.LogInfo(message)); }
                 catch (Exception ex) when (!(ex is IOException))
                 {
                     // A mod version without a known reset: switching in the running game could mix
@@ -177,7 +191,11 @@ namespace TCG.SaveManager.Diagnostics
 
         // Void prefixes observe only: no argument, result or game state changes.
         private static void SavePrefix(int __0, bool __1) => log?.LogInfo($"[SaveManager] Save slot={__0}, skipJSONSave={__1}");
-        private static void LoadPrefix(MethodBase __originalMethod, int __0) => log?.LogInfo($"[SaveManager] {__originalMethod.Name} slot={__0}");
+        private static void LoadPrefix(MethodBase __originalMethod, int __0)
+        {
+            shopPlayedThisSession = true;
+            log?.LogInfo($"[SaveManager] {__originalMethod.Name} slot={__0}");
+        }
         private static void LoadPostfix(MethodBase __originalMethod, bool __result) => log?.LogInfo($"[SaveManager] {__originalMethod.Name} résultat={__result}");
         private static bool MovePrefix()
         {
@@ -201,7 +219,7 @@ namespace TCG.SaveManager.Diagnostics
             var empty = true;
             for (var slot = 0; slot < 4; slot++)
                 foreach (var file in SaveInventory.NativeFiles(Application.persistentDataPath, slot)) empty = false;
-            if (prepared?.LoadedKind == "new" && empty) { plugin.visible = false; return true; }
+            if (prepared?.LoadedKind == "new" && empty) { plugin.visible = false; shopPlayedThisSession = true; return true; }
             plugin.visible = true;
             plugin.nativeSaveMode = false;
             plugin.createDialog = true;
@@ -275,6 +293,7 @@ namespace TCG.SaveManager.Diagnostics
             if (workspace != null && Time.realtimeSinceStartup >= nextArchive)
             {
                 nextArchive = Time.realtimeSinceStartup + 5;
+                if (!shopPlayedThisSession && InGameLevel()) shopPlayedThisSession = true;
                 // Hashing and Furniture's JsonUtility normalization run on Unity's thread.
                 // Keep these operations out of gameplay; native saves still write normally.
                 if (visible || IsAtTitle())
