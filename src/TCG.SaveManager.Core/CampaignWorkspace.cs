@@ -171,7 +171,7 @@ namespace TCG.SaveManager.Core
         public sealed class ModRequirement { public string Name = "", Id = ""; public bool Loaded; }
         static readonly (string Name, string Id, Func<string, bool> Uses)[] Adapters =
         {
-            ("Staff Overhaul", "com.qolmods.staffoverhaul", p => p.StartsWith("StaffOverhaulSnapshots/", StringComparison.Ordinal)),
+            ("Staff Overhaul", "com.qolmods.staffoverhaul", p => p.StartsWith("StaffOverhaul", StringComparison.Ordinal)),
             ("Shop C", "com.qolmods.shoplotc", p => p.StartsWith("ShopLotC_Save", StringComparison.Ordinal)),
             ("Upstairs", "com.qolmods.upstairs", p => p.StartsWith("Upstairs_", StringComparison.Ordinal) || p.StartsWith("Upstairs/", StringComparison.Ordinal)),
             ("Furniture Overhaul", "com.qolmods.furnitureoverhaul", p => p.StartsWith("FurnitureOverhaul", StringComparison.Ordinal)),

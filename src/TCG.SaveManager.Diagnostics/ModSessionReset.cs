@@ -20,7 +20,9 @@ namespace TCG.SaveManager.Diagnostics
             Add("com.qolmods.upstairs", "1.4.2", "Upstairs.UpWorld", "Upstairs.UpState");
             if (Chainloader.PluginInfos.TryGetValue("com.qolmods.staffoverhaul", out var staff))
             {
-                if (staff.Metadata.Version != new Version("2.1.1") || staff.Instance == null) throw new InvalidOperationException(T("Version Staff Overhaul non prise en charge."));
+                // 1.4.5 : any version keeping its reset method is accepted (2.1.1 tested; 2.3.3 checked).
+                if (staff.Instance == null) throw new InvalidOperationException(T("Version Staff Overhaul non prise en charge."));
+                if (staff.Metadata.Version != new Version("2.1.1")) log(F("Staff Overhaul {0} : réinitialisation par sa méthode Reset (version 2.1.1 testée).", staff.Metadata.Version));
                 var reset = staff.Instance.GetType().Assembly.GetType("StaffOverhaul.Staff")?.GetMethod("Reset", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static, null, Type.EmptyTypes, null);
                 if (reset == null || reset.ReturnType != typeof(void)) throw new MissingMethodException(T("Réinitialisation Staff indisponible."));
                 actions.Add(reset);
@@ -96,8 +98,10 @@ namespace TCG.SaveManager.Diagnostics
             void Add(string id, string version, string world, string state)
             {
                 if (!Chainloader.PluginInfos.TryGetValue(id, out var plugin)) return;
-                if (plugin.Metadata.Version != new Version(version) || plugin.Instance == null)
-                    throw new InvalidOperationException(F("Version du mod non prise en charge : {0}", id));
+                // 1.4.5 : Shop C and Upstairs expose Teardown and Reset for this: a newer version that
+                // keeps them is accepted; without them, switching shops asks for a restart instead.
+                if (plugin.Instance == null) throw new InvalidOperationException(F("Version du mod non prise en charge : {0}", id));
+                if (plugin.Metadata.Version != new Version(version)) log(F("{0} {1} : réinitialisation par ses méthodes Teardown et Reset (version {2} testée).", plugin.Metadata.Name, plugin.Metadata.Version, version));
                 var assembly = plugin.Instance.GetType().Assembly;
                 foreach (var step in new[] { (Type: world, Method: "Teardown"), (Type: state, Method: "Reset") })
                 {

@@ -37,6 +37,8 @@
                 "Requested shop not loaded, the current shop is kept: {0}",
             "Archivage",
                 "Archiving",
+            "Changement de boutique sans redémarrage indisponible avec vos mods ({0}) : un redémarrage sera demandé pour changer de boutique.",
+                "Switching shops without a restart is unavailable with your mods ({0}): a restart will be asked to switch shops.",
             "Changement sans redémarrage impossible avec vos mods ({0}). La boutique choisie sera chargée au prochain démarrage : quittez puis relancez le jeu.",
                 "Your mods do not allow switching without a restart ({0}). The chosen shop will be loaded at the next start: quit and relaunch the game.",
         };

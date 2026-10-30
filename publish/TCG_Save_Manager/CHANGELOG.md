@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.4.5
+- Newer versions of Shop Lot C, Upstairs and Staff Overhaul (updated for the game's Unity 6 version) no longer prevent switching shops without a restart: their own reset methods are used. With a Furniture Overhaul version other than 1.6.1, switching shops still asks for a restart, which is safe.
+- An unsupported mod version is reported as a warning, not as an error, in the log.
+- Staff Overhaul 2.3: its legacy per-slot file and its migration marker follow each shop.
+
 ## 1.4.4
 - Compatible with the game update to Unity 6 (October 2026). After the update, the game closed at start-up with Furniture Overhaul or Staff Overhaul installed: their files are linked to each save by a fingerprint that the new game version computes differently. Saves made before the update are now recognised by the fingerprint recorded when they were saved.
 - Save Manager never closes the game at start-up any more: if the current shop cannot be archived yet, or a shop needs mods that are missing, the game starts with the current shop and a message explains why.

@@ -14,7 +14,9 @@ namespace TCG.SaveManager.Core
         {
             if (slot < 0 || slot > 3) throw new ArgumentOutOfRangeException(nameof(slot));
             return new[] { $"savedGames_Release{slot}.json", $"savedGames_Release{slot}.gd", $"savedGames_ReleaseBackupFile{slot}.json",
-                $"ShopLotC_Save{slot}.json", $"Upstairs/Upstairs_{slot}.json", $"Upstairs_Save{slot}.json", $"StaffOverhaulSnapshots/initialized-slot{slot}.txt" }
+                $"ShopLotC_Save{slot}.json", $"Upstairs/Upstairs_{slot}.json", $"Upstairs_Save{slot}.json", $"StaffOverhaulSnapshots/initialized-slot{slot}.txt",
+                // 1.4.5 : Staff Overhaul 2.3 migrates a legacy per-slot file and marks the slot as migrated.
+                $"StaffOverhaul_Save{slot}.json", $"StaffOverhaulSnapshots/migrated-slot{slot}.txt" }
                 .Concat(FurnitureFolders.SelectMany(f => new[] { $"{f}/slot{slot}.json", $"{f}/slot{slot}.backup.json" }))
                 .Concat(LateAdapters(slot));
         }

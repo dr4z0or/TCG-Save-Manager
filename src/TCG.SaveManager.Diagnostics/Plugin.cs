@@ -12,7 +12,7 @@ using UnityEngine;
 using static TCG.Shared.Lang;
 namespace TCG.SaveManager.Diagnostics
 {
-    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.4")]
+    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.5")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private Harmony? harmony;
@@ -302,7 +302,9 @@ namespace TCG.SaveManager.Diagnostics
             if (!updateConfirmed)
             {
                 updateConfirmed = true; Logger.LogInfo("Diagnostic : Update actif.");
-                Run(() => { ModSessionReset.Prepare(message => Logger.LogInfo(message)); Logger.LogInfo("Plan de réinitialisation des mods résolu, sans exécution."); }, false);
+                // 1.4.5 : an unsupported mod version is not an error: switching shops then asks for a restart.
+                try { ModSessionReset.Prepare(message => Logger.LogInfo(message)); Logger.LogInfo("Plan de réinitialisation des mods résolu, sans exécution."); }
+                catch (Exception ex) { Logger.LogWarning(F("Changement de boutique sans redémarrage indisponible avec vos mods ({0}) : un redémarrage sera demandé pour changer de boutique.", ex.InnerException?.Message ?? ex.Message)); }
             }
             if (workspace != null && Time.realtimeSinceStartup >= nextArchive)
             {
