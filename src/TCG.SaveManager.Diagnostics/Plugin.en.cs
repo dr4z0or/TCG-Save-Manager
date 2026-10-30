@@ -33,6 +33,10 @@
                 "Not possible: {0}",
             "Choisissez un nom pour votre nouvelle boutique.",
                 "Choose a name for your new shop.",
+            "Boutique demandée non chargée, la boutique active est conservée : {0}",
+                "Requested shop not loaded, the current shop is kept: {0}",
+            "Archivage",
+                "Archiving",
             "Changement sans redémarrage impossible avec vos mods ({0}). La boutique choisie sera chargée au prochain démarrage : quittez puis relancez le jeu.",
                 "Your mods do not allow switching without a restart ({0}). The chosen shop will be loaded at the next start: quit and relaunch the game.",
         };

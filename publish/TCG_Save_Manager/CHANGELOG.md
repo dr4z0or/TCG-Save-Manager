@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.4
+- Compatible with the game update to Unity 6 (October 2026). After the update, the game closed at start-up with Furniture Overhaul or Staff Overhaul installed: their files are linked to each save by a fingerprint that the new game version computes differently. Saves made before the update are now recognised by the fingerprint recorded when they were saved.
+- Save Manager never closes the game at start-up any more: if the current shop cannot be archived yet, or a shop needs mods that are missing, the game starts with the current shop and a message explains why.
+
 ## 1.4.3
 - Saving no longer froze the game for several seconds with large saves (Windows could show "Not responding"): each save file is now analysed once instead of several times.
 

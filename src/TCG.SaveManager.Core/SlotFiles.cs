@@ -46,6 +46,34 @@ namespace TCG.SaveManager.Core
             if (matches.Count != 1) throw new IOException(F("Empreinte de compagnon absente ou invalide : {0}", file));
             return matches[0].Groups[1].Value;
         }
+        // 1.4.4 : Furniture and Staff name their companion files after a fingerprint of the game save
+        // computed with the game's own data classes. After a game update the same save can give another
+        // fingerprint, so the one recorded at save time is also accepted: a companion written within a
+        // few seconds of the save it accompanies (same save operation) names the save's fingerprint.
+        // Only for saves made before the installed game build: a save made with this build must match.
+        public static DateTime? GameBuildUtc { get; set; }
+        public static string? SavedHash(string root, int slot)
+        {
+            var main = new FileInfo(Path.Combine(root, $"savedGames_Release{slot}.json"));
+            if (!main.Exists || GameBuildUtc == null || main.LastWriteTimeUtc >= GameBuildUtc.Value) return null;
+            // Written by the same save: the companion first, at most a few seconds before the game's JSON.
+            bool SameSave(FileInfo file) => file.Exists && file.LastWriteTimeUtc <= main.LastWriteTimeUtc.AddSeconds(1) &&
+                (main.LastWriteTimeUtc - file.LastWriteTimeUtc).TotalSeconds <= 10;
+            foreach (var folder in FurnitureFolders.Skip(2))
+            {
+                var companion = new FileInfo(Path.Combine(root, folder, $"slot{slot}.json"));
+                if (!SameSave(companion) || (companion.Attributes & FileAttributes.ReparsePoint) != 0) continue;
+                try { return MainHash(companion.FullName); } catch (IOException) { }
+            }
+            var staff = new DirectoryInfo(Path.Combine(root, "StaffOverhaulSnapshots"));
+            if (staff.Exists && (staff.Attributes & FileAttributes.ReparsePoint) == 0)
+                foreach (var file in staff.GetFiles("*.txt").Where(f => Regex.IsMatch(f.Name, "^[a-f0-9]{64}\\.txt$") && SameSave(f)).OrderByDescending(f => f.LastWriteTimeUtc))
+                {
+                    var hash = Path.GetFileNameWithoutExtension(file.Name);
+                    try { if (MainHash(file.FullName) == hash) return hash; } catch (IOException) { }
+                }
+            return null;
+        }
         public static IEnumerable<string> Existing(string root, int slot, bool validateLinked = true, Func<string, string>? gameHash = null)
         {
             foreach (var name in Names(slot))
@@ -68,7 +96,8 @@ namespace TCG.SaveManager.Core
                     var path = Path.Combine(root, native);
                     if (!File.Exists(path)) continue;
                     var raw = LabStore.Hash(path).ToLowerInvariant();
-                    foreach (var hash in new[] { raw, gameHash == null ? raw : gameHash(path) }.Distinct())
+                    var saved = native.StartsWith("savedGames_Release", StringComparison.Ordinal) && !native.Contains("Backup") ? SavedHash(root, slot) : null;
+                    foreach (var hash in new[] { raw, gameHash == null ? raw : gameHash(path), saved ?? raw }.Distinct())
                     {
                         var linked = Path.Combine(staffDirectory, hash + ".txt");
                         if (!File.Exists(linked)) continue;

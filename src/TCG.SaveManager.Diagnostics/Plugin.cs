@@ -12,7 +12,7 @@ using UnityEngine;
 using static TCG.Shared.Lang;
 namespace TCG.SaveManager.Diagnostics
 {
-    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.3")]
+    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.4")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private Harmony? harmony;
@@ -127,6 +127,9 @@ namespace TCG.SaveManager.Diagnostics
             try
             {
                 workspace = new CampaignWorkspace(Application.persistentDataPath, ModSessionReset.GameHash);
+                // 1.4.4 : saves older than the installed game build keep the fingerprints recorded by their mods.
+                var gameCode = Path.Combine(BepInEx.Paths.ManagedPath, "Assembly-CSharp.dll");
+                if (File.Exists(gameCode)) TCG.SaveManager.Core.SlotFiles.GameBuildUtc = File.GetLastWriteTimeUtc(gameCode);
                 // Unity's native save folder: %USERPROFILE%\AppData\LocalLow\<company>\<product>.
                 var local = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
                 if (!string.IsNullOrEmpty(local))
@@ -142,8 +145,19 @@ namespace TCG.SaveManager.Diagnostics
                     if (workspace == null) throw new InvalidOperationException(T("Espace isolé indisponible."));
                     Logger.LogInfo("Initialisation autonome : " + workspace.RecoverInterrupted());
                     var request = workspace.Pending;
-                    if (request != null) workspace.CheckRequiredMods(request.CampaignId, request.Kind, request.SnapshotId, BepInEx.Bootstrap.Chainloader.PluginInfos.Keys);
-                    Logger.LogInfo("Initialisation autonome : " + workspace.PrepareLaunch());
+                    // 1.4.4 : a shop that needs missing mods is not loaded, but the game still starts
+                    // with the current shop instead of closing.
+                    if (request != null)
+                        try { workspace.CheckRequiredMods(request.CampaignId, request.Kind, request.SnapshotId, BepInEx.Bootstrap.Chainloader.PluginInfos.Keys); }
+                        catch (Exception ex) when (!(ex is IOException))
+                        {
+                            workspace.CancelRequest();
+                            status = F("Boutique demandée non chargée, la boutique active est conservée : {0}", ex.Message);
+                            Logger.LogWarning(status);
+                        }
+                    var prepared = workspace.PrepareStartup();
+                    Logger.LogInfo("Initialisation autonome : " + prepared);
+                    if (prepared.StartsWith(T("Archivage"), StringComparison.Ordinal)) { status = prepared; Logger.LogWarning(prepared); }
                 }
                 catch (Exception ex)
                 {

@@ -40,6 +40,8 @@ try
         ModFilesTest.Run(args[1]);
     else if (args.Length == 2 && args[0] == "native-import-test")
         NativeImportTest.Run(args[1]);
+    else if (args.Length == 2 && args[0] == "game-update-test")
+        GameUpdateTest.Run(args[1]);
     else if (args.Length == 2 && args[0] == "slots-test")
         SlotsTest.Run(args[1]);
     else if (args.Length == 2 && args[0] == "self-test")

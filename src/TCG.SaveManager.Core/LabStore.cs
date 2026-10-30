@@ -83,12 +83,14 @@ namespace TCG.SaveManager.Core
             var folder = Folder(id);
             if (!File.Exists(Path.Combine(folder, "campaign.xml"))) throw new InvalidOperationException(T("Partie inconnue."));
             var files = SlotFiles.Existing(source, slot, true, gameHash).ToArray();
+            var saved = SlotFiles.SavedHash(source, slot);
             foreach (var folderName in SlotFiles.FurnitureFolders.Skip(2))
             {
                 var companion = Path.Combine(source, folderName, $"slot{slot}.json");
                 if (!File.Exists(companion)) continue;
                 var main = Path.Combine(source, $"savedGames_Release{slot}.json");
-                if (!File.Exists(main) || SlotFiles.MainHash(companion) != (gameHash == null ? Hash(main).ToLowerInvariant() : gameHash(main)))
+                var recorded = File.Exists(main) ? SlotFiles.MainHash(companion) : null;
+                if (recorded == null || (recorded != saved && recorded != (gameHash == null ? Hash(main).ToLowerInvariant() : gameHash(main))))
                     throw new IOException(T("Compagnon Furniture non associé à la sauvegarde native. Archivage différé."));
             }
             var hashes = files.ToDictionary(p => p, Hash);

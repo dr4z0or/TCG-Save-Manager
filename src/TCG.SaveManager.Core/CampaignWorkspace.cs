@@ -248,6 +248,23 @@ namespace TCG.SaveManager.Core
             return changed;
         }
 
+        // 1.4.4 : at game start, a shop that cannot be archived yet (a companion file not recognised,
+        // e.g. after a game update) must not close the game. Nothing has been replaced at that point:
+        // the current shop simply stays in the game's slots, and a pending switch is cancelled.
+        public string PrepareStartup()
+        {
+            if (!File.Exists(Path.Combine(root, "restore-in-progress.txt")))
+            {
+                try { ArchiveCurrent(); }
+                catch (IOException ex)
+                {
+                    if (!HasRequest) return F("Archivage différé, boutique active conservée : {0}", ex.Message);
+                    CancelRequest();
+                    return F("Archivage impossible : la boutique active est conservée et la boutique demandée n'est pas chargée ({0}).", ex.Message);
+                }
+            }
+            return PrepareLaunch();
+        }
         // Called by the launcher only, before the game process exists.
         public string PrepareLaunch()
         {
