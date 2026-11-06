@@ -12,7 +12,7 @@ using UnityEngine;
 using static TCG.Shared.Lang;
 namespace TCG.SaveManager.Diagnostics
 {
-    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.5")]
+    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.6")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private Harmony? harmony;
@@ -218,11 +218,22 @@ namespace TCG.SaveManager.Diagnostics
             return allow;
         }
 
+        // 1.4.6 : never call the game's CSingleton<T>.Instance getter. When the object does not exist yet
+        // (Unity 6 build: the title scene loads later), that getter creates an empty "(singleton)" copy and
+        // keeps it for the whole session: CGameManager then has no text data and every input tooltip of
+        // the game shows "Action Name". Only an object the game already created is used.
         private static object GameInstance(string typeName)
         {
             var type = AccessTools.TypeByName(typeName) ?? throw new MissingMemberException(typeName);
-            var getter = type.GetProperty("Instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.FlattenHierarchy)?.GetGetMethod(true);
-            return getter?.Invoke(null, null) ?? UnityEngine.Object.FindObjectOfType(type) ?? throw new InvalidOperationException(typeName + " indisponible.");
+            for (var b = type.BaseType; b != null; b = b.BaseType)
+                if (b.IsGenericType && b.GetGenericTypeDefinition().Name == "CSingleton`1")
+                {
+                    const BindingFlags any = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+                    var known = b.GetField("instance", any)?.GetValue(null) as UnityEngine.Object;
+                    if (known != null && b.GetField("isSet", any)?.GetValue(null) is true) return known;
+                    break;
+                }
+            return UnityEngine.Object.FindObjectOfType(type) ?? throw new InvalidOperationException(typeName + " indisponible.");
         }
         private static bool NewGamePressed()
         {

@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.6
+- Fixed every input hint of the game showing "F / Action Name" since the game's Unity 6 update. Save Manager looked up the game manager before the game had created it, which made the game create an empty copy without its texts. It now only uses objects the game has created.
+
 ## 1.4.5
 - Newer versions of Shop Lot C, Upstairs and Staff Overhaul (updated for the game's Unity 6 version) no longer prevent switching shops without a restart: their own reset methods are used. With a Furniture Overhaul version other than 1.6.1, switching shops still asks for a restart, which is safe.
 - An unsupported mod version is reported as a warning, not as an error, in the log.
