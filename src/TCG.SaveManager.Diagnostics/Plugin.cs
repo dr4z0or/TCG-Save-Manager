@@ -12,7 +12,7 @@ using UnityEngine;
 using static TCG.Shared.Lang;
 namespace TCG.SaveManager.Diagnostics
 {
-    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.6")]
+    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.7")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private Harmony? harmony;
@@ -20,6 +20,8 @@ namespace TCG.SaveManager.Diagnostics
         // 1.4.2 : true once a shop has been loaded or started in this game session. Before that,
         // the mods hold no shop state, so switching needs no reset (and never a restart).
         private static bool shopPlayedThisSession;
+        // 1.4.7 : set when a shop switch needs a restart; the menu then offers to quit the game.
+        private bool restartRequired;
         private bool visible = false;
         private bool updateConfirmed;
         private bool guiConfirmed;
@@ -77,8 +79,13 @@ namespace TCG.SaveManager.Diagnostics
                     ?? throw new MissingMethodException("Démarrage natif indisponible.");
                 workspace!.CheckRequiredMods(id, kind, snapshotId, BepInEx.Bootstrap.Chainloader.PluginInfos.Keys);
                 Action resetMods;
+                // 1.4.7 : reloading the shop already in the game's slots (save, back to the main menu,
+                // load again) is what the game and its mods do without Save Manager: no reset, no restart.
+                var sameShop = workspace.Active?.CampaignId == id;
                 if (!shopPlayedThisSession)
                     resetMods = () => Logger.LogInfo("Première boutique de la session : aucun état de mod à réinitialiser.");
+                else if (sameShop)
+                    resetMods = () => Logger.LogInfo("Même boutique : rechargement normal du jeu, sans réinitialisation des mods.");
                 else try { resetMods = ModSessionReset.Prepare(message => Logger.LogInfo(message)); }
                 catch (Exception ex) when (!(ex is IOException))
                 {
@@ -87,6 +94,7 @@ namespace TCG.SaveManager.Diagnostics
                     workspace!.Request(id, kind, snapshotId);
                     var reason = ex.InnerException?.Message ?? ex.Message;
                     status = F("Changement sans redémarrage impossible avec vos mods ({0}). La boutique choisie sera chargée au prochain démarrage : quittez puis relancez le jeu.", reason);
+                    restartRequired = true;
                     Logger.LogWarning(status);
                     return;
                 }

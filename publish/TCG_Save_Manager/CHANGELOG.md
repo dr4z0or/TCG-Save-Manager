@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.7
+- Saving, going back to the main menu and loading the same shop again no longer asks to restart the game, whatever your mod versions: like the game itself, the shop is simply reloaded.
+- When switching to another shop really needs a restart (a Furniture Overhaul version other than 1.6.1), the menu now has a "Quit the game now" button; the chosen shop loads at the next start.
+
 ## 1.4.6
 - Fixed every input hint of the game showing "F / Action Name" since the game's Unity 6 update. Save Manager looked up the game manager before the game had created it, which made the game create an empty copy without its texts. It now only uses objects the game has created.
 

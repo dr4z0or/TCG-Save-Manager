@@ -43,6 +43,8 @@
                 "Back",
             "Importer une sauvegarde",
                 "Import a save",
+            "Quitter le jeu maintenant",
+                "Quit the game now",
             "Masquer le diagnostic",
                 "Hide diagnostics",
             "Diagnostic",

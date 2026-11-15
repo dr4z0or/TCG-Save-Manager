@@ -197,6 +197,12 @@ namespace TCG.SaveManager.Diagnostics
                 if (GUI.Button(new Rect(30, 648, 165, 36), T("Retour"), blueButton)) CloseView();
                 if (!saving && GUI.Button(new Rect(220, 648, 230, 36), T("Importer une sauvegarde"), quietButton)) Run(OpenImportDialog);
                 if (GUI.Button(new Rect(785, 648, 185, 36), showInventory ? T("Masquer le diagnostic") : T("Diagnostic"), quietButton)) showInventory = !showInventory;
+                // 1.4.7 : the chosen shop is loaded at the next start; quitting from here is the clean way.
+                if (restartRequired && GUI.Button(new Rect(475, 648, 290, 36), T("Quitter le jeu maintenant"), goldButton))
+                {
+                    Logger.LogInfo("Fermeture demandée pour charger la boutique choisie au prochain démarrage.");
+                    Application.Quit();
+                }
                 GUI.enabled = true;
                 if (showInventory) DrawDiagnostics();
                 if (createDialog || renameId != null) DrawNameDialog();
