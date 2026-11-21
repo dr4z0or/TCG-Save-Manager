@@ -12,7 +12,7 @@ using UnityEngine;
 using static TCG.Shared.Lang;
 namespace TCG.SaveManager.Diagnostics
 {
-    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.7")]
+    [BepInPlugin("local.tcg.savemanager.diagnostics", "TCG Save Manager", "1.4.8")]
     public sealed partial class Plugin : BaseUnityPlugin
     {
         private Harmony? harmony;
@@ -100,7 +100,8 @@ namespace TCG.SaveManager.Diagnostics
                 }
                 if (nativeScreen != null) AccessTools.Method(nativeScreen.GetType(), "CloseScreen").Invoke(nativeScreen, null);
                 workspace!.Request(id, kind, snapshotId);
-                Logger.LogInfo(workspace.PrepareLaunch());
+                var preparing = System.Diagnostics.Stopwatch.StartNew();
+                Logger.LogInfo(workspace.PrepareLaunch() + " (" + preparing.ElapsedMilliseconds + " ms)");
                 resetMods();
                 AccessTools.Field(game.GetType(), "m_CurrentSaveLoadSlotSelectedIndex").SetValue(game, 0);
                 AccessTools.Field(game.GetType(), "m_IsManualSaveLoad").SetValue(game, false);

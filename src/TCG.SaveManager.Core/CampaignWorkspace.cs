@@ -286,13 +286,28 @@ namespace TCG.SaveManager.Core
             if (request.Kind == "new" && (Latest(request.CampaignId, "auto") != null || Latest(request.CampaignId, "manual") != null))
                 throw new InvalidOperationException(T("Une nouvelle partie ne peut pas vider une boutique existante."));
             var previousCampaign = Active?.CampaignId;
+            var manualSnapshot = request.Kind == "manual" ? selected : Latest(request.CampaignId, "manual");
+            // 1.4.8 : "Continuer" on the shop already in the game's slots used to swap every file for an
+            // identical copy (about 40 MB copied and hashed several times: a 4-5 s freeze on big shops).
+            // When the slots already hold exactly what the switch would put there, nothing is replaced.
+            if (selected != null && request.CampaignId == previousCampaign && AlreadyInPlace(selected, manualSnapshot))
+            {
+                // ArchiveCurrent above just brought the fingerprints up to date; slot 1 is the only manual
+                // slot here (any other slot file would have failed the check), and it is empty without a
+                // manual snapshot.
+                var session = Active!;
+                session.LoadedKind = request.Kind;
+                if (manualSnapshot == null) session.ManualFingerprint = "";
+                Write(activePath, session);
+                File.Delete(requestPath);
+                return T("Boutique préparée : choisir Continuer (slot auto) dans le jeu.");
+            }
             var transaction = Path.Combine(root, "recovery", DateTime.UtcNow.ToString("yyyyMMddTHHmmssfffffff") + "-" + Guid.NewGuid().ToString("N"));
             var staging = Path.Combine(transaction, "staging");
             var backup = Path.Combine(transaction, "before");
             Directory.CreateDirectory(staging);
             Directory.CreateDirectory(backup);
             if (selected != null) Stage(selected, staging, 0);
-            var manualSnapshot = request.Kind == "manual" ? selected : Latest(request.CampaignId, "manual");
             if (manualSnapshot != null) Stage(manualSnapshot, staging, 1);
             // A snapshot made before 1.2 has no Enhanced Prefab Loader / Collection Tracker file. When the
             // same shop is reloaded, keep its current file instead of deleting its mod-edition cards.
@@ -380,6 +395,45 @@ namespace TCG.SaveManager.Core
             if (!File.Exists(file)) return "";
             var companions = SlotFiles.Existing(saves, slot, true, gameHash).Where(p => !Path.GetFileName(p).StartsWith("savedGames_", StringComparison.Ordinal)).ToArray();
             return LabStore.Hash(file) + string.Concat(companions.Select(p => "|" + SlotFiles.Remap(SlotFiles.Relative(saves, p), slot, 0) + ":" + LabStore.Hash(p)));
+        }
+        // 1.4.8 : true when the game's slots hold exactly the files a switch to these snapshots would put
+        // there (same names, same SHA-256), so the switch can leave them alone. Companion files named after
+        // a save fingerprint that belong to no snapshot (left by earlier saves) are tolerated: the game
+        // never reads them. Any doubt (no manifest, a missing or different file) means a full switch.
+        private bool AlreadyInPlace(string selected, string? manual)
+        {
+            var planned = new System.Collections.Generic.Dictionary<string, string>(StringComparer.Ordinal);
+            if (!Planned(selected, 0, planned) || (manual != null && !Planned(manual, 1, planned))) return false;
+            var current = SlotFiles.Working(saves).ToDictionary(p => SlotFiles.Relative(saves, p), p => p, StringComparer.Ordinal);
+            if (planned.Keys.Any(name => !current.ContainsKey(name))) return false;
+            if (current.Keys.Any(name => !planned.ContainsKey(name) && !SlotFiles.HashName(name))) return false;
+            foreach (var entry in planned)
+            {
+                var file = current[entry.Key];
+                if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0) return false;
+                if (!string.Equals(LabStore.Hash(file), entry.Value, StringComparison.OrdinalIgnoreCase)) return false;
+            }
+            return true;
+        }
+        private static bool Planned(string snapshot, int targetSlot, System.Collections.Generic.Dictionary<string, string> planned)
+        {
+            var info = Path.Combine(snapshot, "snapshot.txt");
+            var manifest = Path.Combine(snapshot, "files-sha256.txt");
+            if (!File.Exists(info) || !File.Exists(manifest)) return false;
+            var line = File.ReadAllLines(info).FirstOrDefault(l => l.StartsWith("sourceSlot=", StringComparison.Ordinal));
+            if (line == null || !int.TryParse(line.Substring(11), out var slot) || slot < 0 || slot > 3) return false;
+            foreach (var entry in File.ReadAllLines(manifest))
+            {
+                var parts = entry.Split('|');
+                if (parts.Length != 2 || parts[1].Length != 64) return false;
+                string name;
+                try { name = SlotFiles.Remap(parts[0], slot, targetSlot); }
+                catch (IOException) { return false; }
+                // A fingerprint-named companion may be listed by both snapshots: it must be the same file.
+                if (planned.TryGetValue(name, out var other) && !string.Equals(other, parts[1], StringComparison.OrdinalIgnoreCase)) return false;
+                planned[name] = parts[1];
+            }
+            return true;
         }
         private static void Stage(string snapshot, string staging, int targetSlot)
         {

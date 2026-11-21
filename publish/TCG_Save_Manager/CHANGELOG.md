@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.4.8
+- Clicking "Continue" on the shop that is already loaded in the game's save slots no longer freezes the game for several seconds with large saves. Save Manager used to replace every save file with an identical copy (tens of megabytes copied and checked several times); it now checks that the right files are already in place and leaves them alone. Switching to another shop, or to an older version of a save, still goes through the full, recoverable switch.
+
 ## 1.4.7
 - Saving, going back to the main menu and loading the same shop again no longer asks to restart the game, whatever your mod versions: like the game itself, the shop is simply reloaded.
 - When switching to another shop really needs a restart (a Furniture Overhaul version other than 1.6.1), the menu now has a "Quit the game now" button; the chosen shop loads at the next start.
